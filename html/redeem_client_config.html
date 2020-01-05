@@ -1,0 +1,50 @@
+<html>
+<head>
+<script src='https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js'></script>
+</head>
+<body>
+  <div id='progress'></div>
+  <script>
+const checkProgress = (token, callback) => {
+  $.ajax({
+    type: 'POST',
+    url: '/client/configs',
+    data: JSON.stringify({
+      token
+    }),
+    contentType: 'application/json',
+    success: (result) => {
+      if (result.hasOwnProperty(token) || result === 'REQUEST_CREATED') {
+        $( '#progress' ).html($( '#progress' ).html() + '.')
+        sleep(10000).then(() => checkProgress(token, callback))
+        return
+      }
+      callback(result)
+    },
+    error: (request, status, error) => {
+      console.error(request, status, error)
+      $( '#progress' ).html(request.responseText)
+    }
+  })
+}
+
+const sleep = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const searchParams = new URLSearchParams(window.location.search)
+if (searchParams.has('token')) {
+  const token = searchParams.get('token')
+
+  checkProgress(token, (config) => {
+    $( '#progress' ).html('done')
+
+    const link = document.createElement('a')
+    link.download = `${clientName}-vpn.arrowlofts.net.ovpn`
+    link.href = `data:application/ovpn,${encodeURIComponent(config)}`
+    link.click();
+  })
+}
+  </script>
+</body>
+</html>

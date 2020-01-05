@@ -7,6 +7,8 @@ const Sequelize = require('sequelize')
 const { createClientKey, getClientFiles, createServerKey, getServerFiles } = require('./ca')
 const { createClientConfig, createServerConfig } = require('./openvpn_config')
 
+let jwtSecretStr
+
 const requestDatabase = new Sequelize({
   dialect: 'sqlite',
   storage: './rest.sqlite',
@@ -18,7 +20,7 @@ const CreateClientKeyRequest = requestDatabase.define('createClientKeyRequest', 
   status: Sequelize.ENUM('REQUEST_CREATED', 'ERROR', 'READY')
 })
 
-const createConfigRequest = (jwtSecretStr, clientName, clientEmail) => {
+const createClientConfigRequest = (clientName, clientEmail) => {
   let token
   return requestDatabase.sync().then(() => CreateClientKeyRequest.create({
     clientName,
@@ -45,7 +47,7 @@ const CreateServerKeyRequest = requestDatabase.define('createServerKeyRequest', 
   status: Sequelize.ENUM('REQUEST_CREATED', 'ERROR', 'READY')
 })
 
-const createServerConfigRequest = (jwtSecretStr) => {
+const createServerConfigRequest = () => {
   let token
   return requestDatabase.sync().then(() => CreateServerKeyRequest.create({
     status: 'REQUEST_CREATED'
@@ -86,7 +88,7 @@ const removePrivateServerFiles = () => {
 
 const createRouter = () => {
   const params = JSON.parse(fs.readFileSync('./params.json'))
-  let { jwtSecretStr } = params
+  jwtSecretStr = params.jwtSecretStr
   if (!jwtSecretStr) {
     const jwtSecret = new Uint8Array(30)
     crypto.randomFillSync(jwtSecret)
@@ -110,7 +112,7 @@ const createRouter = () => {
           res.status(500).send('request already exists')
           return
         }
-        createConfigRequest(jwtSecretStr, clientName, clientEmail).then(token => {
+        createClientConfigRequest(clientName, clientEmail).then(token => {
           res.send({
             token
           })
@@ -162,7 +164,7 @@ const createRouter = () => {
           res.status(500).send('request already exists')
           return
         }
-        createServerConfigRequest(jwtSecretStr).then(token => {
+        createServerConfigRequest().then(token => {
           res.send({
             token
           })
@@ -211,5 +213,7 @@ const createRouter = () => {
 }
 
 module.exports = {
-  createCARouter: createRouter
+  createCARouter: createRouter,
+  createClientConfigRequest,
+  createServerConfigRequest
 }

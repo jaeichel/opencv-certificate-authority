@@ -15,7 +15,8 @@
     "jsonwebtoken": "^8.5.1",
     "openssl-nodejs": "^1.0.5",
     "sequelize": "^5.21.3",
-    "sqlite3": "^4.1.1"
+    "sqlite3": "^4.1.1",
+    "yargs": "^15.1.0"
   },
   "devDependencies": {
     "standard": "^14.3.1"
