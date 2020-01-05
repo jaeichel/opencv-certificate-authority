@@ -1,0 +1,23 @@
+{
+  "name": "opencv-certificate-authority",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "bin": "app.js",
+  "scripts": {
+    "test": "standard"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "generate-password": "^1.4.2",
+    "jsonwebtoken": "^8.5.1",
+    "openssl-nodejs": "^1.0.5",
+    "sequelize": "^5.21.3",
+    "sqlite3": "^4.1.1"
+  },
+  "devDependencies": {
+    "standard": "^14.3.1"
+  }
+}

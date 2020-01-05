@@ -1,0 +1,9 @@
+{
+ "certificateLifetimeDays": 36500,
+ "serverCertificateLifetimeDays": 365,
+ "clientCertificateLifetimeDays": 365,
+ "keyBitSize": 4096,
+ "serverCN": "vpn.arrowlofts.net",
+ "serverEmail": "jaeichel@protonmail.com",
+ "caPassword": "kVpF5UDkFwsvIAkC7KPuU4nAJ0wyfP"
+}
