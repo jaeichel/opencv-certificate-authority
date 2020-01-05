@@ -29,7 +29,7 @@ const createClientConfigRequest = (clientName, clientEmail) => {
     token = jwt.sign({
       requestId: request.id,
       clientName
-    }, jwtSecretStr, { expiresIn: '1h' })
+    }, jwtSecretStr, { expiresIn: '15d' })
     return request
   }).then(request => {
     const params = JSON.parse(fs.readFileSync('./params.json'))
@@ -54,7 +54,7 @@ const createServerConfigRequest = () => {
   })).then(request => {
     token = jwt.sign({
       requestId: request.id
-    }, jwtSecretStr, { expiresIn: '1h' })
+    }, jwtSecretStr, { expiresIn: '15d' })
     return request
   }).then(request => {
     const params = JSON.parse(fs.readFileSync('./params.json'))
@@ -215,5 +215,6 @@ const createRouter = () => {
 module.exports = {
   createCARouter: createRouter,
   createClientConfigRequest,
-  createServerConfigRequest
+  createServerConfigRequest,
+  removePrivateServerFiles
 }

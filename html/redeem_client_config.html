@@ -34,7 +34,9 @@ const sleep = (ms) => {
 
 const searchParams = new URLSearchParams(window.location.search)
 if (searchParams.has('token')) {
+  const clientName = searchParams.get('clientName')
   const token = searchParams.get('token')
+  $( '#progress' ).html('waiting for openvpn server to complete...')
 
   checkProgress(token, (config) => {
     $( '#progress' ).html('done')
