@@ -71,6 +71,7 @@ nsCertType             = server
 nsComment              = "Server Certificate for RootCA"
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid,issuer:always
+keyUsage               = digitalSignature, keyEncipherment, keyAgreement
 extendedKeyUsage       = serverAuth
 
 [ v3_client ]
@@ -78,7 +79,7 @@ basicConstraints       = CA:FALSE
 nsComment              = "Client Certificate for RootCA"
 nsCertType             = client
 extendedKeyUsage       = clientAuth
-keyUsage = digitalSignature, keyAgreement
+keyUsage               = digitalSignature, keyEncipherment, keyAgreement
 
 [ v3_ca ]
 basicConstraints                = CA:TRUE
