@@ -1,4 +1,5 @@
 const fs = require('fs')
+const https = require('https')
 const nodemailer = require('nodemailer')
 
 const { createClientConfigRequest, removePrivateServerFiles } = require('./ca_router')
@@ -54,10 +55,23 @@ const runCli = app => {
       console.error(err)
     })
   } else {
-    const serverPort = process.env.SERVER_PORT || 3000
-    app.listen(serverPort, () => {
-      console.log(`Listening on port ${serverPort}`)
-    })
+    const params = JSON.parse(fs.readFileSync('./params.json'))
+    if (params.sslKey && params.sslCer) {
+      const options = {
+        key: fs.readFileSync(params.sslKey, 'utf8'),
+        cert: fs.readFileSync(params.sslCer, 'utf8')
+      }
+
+      const serverPort = process.env.SERVER_PORT || 443
+      https.createServer(options, app).listen(serverPort, () => {
+        console.log(`Listening on port ${serverPort}`)
+      })
+    } else {
+      const serverPort = process.env.SERVER_PORT || 3000
+      app.listen(serverPort, () => {
+        console.log(`Listening on port ${serverPort}`)
+      })
+    }
   }
 }
 

@@ -277,6 +277,67 @@ const createClientKey = (clientName, emailAddress, params) => {
   })).then(() => clientFiles)
 }
 
+const getCertInfo = (params, cerFilepath) => {
+  const certInfo = {}
+  return new Promise((resolve, reject) => {
+    const resp = spawn(params.openSSLPath, [
+      'x509',
+      '-in', cerFilepath,
+      '-noout',
+      '-dates'
+    ], { env: envVars(), cwd: __dirname })
+    resp.stderr.pipe(process.stderr)
+    resp.stdout.on('data', data => {
+      certInfo.expireDateMs = Date.parse(data.toString().split('\n')[1].split('=')[1])
+    })
+    resp.on('exit', () => {
+      resolve(certInfo)
+    })
+  }).then(() => new Promise((resolve, reject) => {
+    const resp = spawn(params.openSSLPath, [
+      'x509',
+      '-in', cerFilepath,
+      '-noout',
+      '-email'
+    ], { env: envVars(), cwd: __dirname })
+    resp.stderr.pipe(process.stderr)
+    resp.stdout.on('data', data => {
+      certInfo.email = data.toString().split('\n')[0]
+    })
+    resp.on('exit', () => {
+      resolve(certInfo)
+    })
+  })).then(() => new Promise((resolve, reject) => {
+    const resp = spawn(params.openSSLPath, [
+      'x509',
+      '-in', cerFilepath,
+      '-noout',
+      '-subject'
+    ], { env: envVars(), cwd: __dirname })
+    resp.stderr.pipe(process.stderr)
+    resp.stdout.on('data', data => {
+      certInfo.commonName = data.toString().split('/').filter(part => part.includes('CN=')).join('').split('=')[1]
+    })
+    resp.on('exit', () => {
+      resolve(certInfo)
+    })
+  }))
+}
+
+const getAllClientCertInfo = (params) => {
+  const files = fs.readdirSync('./CA/clients')
+  const certInfos = files.filter(file => file.includes('.cer'))
+    .map(async file => getCertInfo(params, path.join('./CA/clients/', file)))
+  return Promise.all(certInfos)
+}
+
+const getAllServerCertInfo = (params) => {
+  const files = fs.readdirSync('./CA/server')
+  const certInfos = files.filter(file => file.includes('.cer'))
+    .map(async file => getCertInfo(params, path.join('./CA/server/', file)))
+  return Promise.all(certInfos)
+}
+
 const initializeCA = async (params) => {
   if (!params.caPassword) {
     params.caPassword = generatePassword()
@@ -303,5 +364,8 @@ module.exports = {
   createCACRL,
   getCAFiles,
   getServerFiles,
-  getClientFiles
+  getClientFiles,
+  getCertInfo,
+  getAllClientCertInfo,
+  getAllServerCertInfo
 }
