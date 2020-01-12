@@ -331,7 +331,7 @@ const getAllClientCertInfo = (params) => {
   return Promise.all(certInfos)
 }
 
-const getAllServerCertInfo = (params) => {
+const getServerCertInfo = (params) => {
   const files = fs.readdirSync('./CA/server')
   const certInfos = files.filter(file => file.includes('.cer'))
     .map(async file => getCertInfo(params, path.join('./CA/server/', file)))
@@ -367,5 +367,5 @@ module.exports = {
   getClientFiles,
   getCertInfo,
   getAllClientCertInfo,
-  getAllServerCertInfo
+  getServerCertInfo
 }

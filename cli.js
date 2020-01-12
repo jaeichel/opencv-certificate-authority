@@ -3,7 +3,7 @@ const https = require('https')
 const nodemailer = require('nodemailer')
 
 const { createClientConfigRequest, removePrivateServerFiles } = require('./ca_router')
-const { createServerKey } = require('./ca')
+const { createServerKey, getAllClientCertInfo, getServerCertInfo } = require('./ca')
 const { createServerConfig } = require('./openvpn_config')
 
 const emailToken = async (clientName, clientEmail, token) => {
@@ -35,6 +35,8 @@ const runCli = app => {
     .example('$0 --clientConfigToken --clientName=user-desktop --clientEmail=user@protonmail.com')
     .command('updateServerConfig', 'update server config')
     .example('$0 --updateServerConfig')
+    .command('autoRenew', 'renew all certificates close to expiry')
+    .example('$0 --autoRenew')
     .argv
 
   if (argv.clientConfigToken) {
@@ -54,6 +56,34 @@ const runCli = app => {
     }).catch(err => {
       console.error(err)
     })
+  } else if (argv.autoRenew) {
+    console.log('Auto renewing keys...')
+    const params = JSON.parse(fs.readFileSync('./params.json'))
+    const expiryDays = params.expiryDays || 30
+
+    const clientInfoPromises = getAllClientCertInfo(params)
+    const serverInfoPromises = getServerCertInfo(params)
+
+    const currentDate = new Date()
+    const after30days = currentDate.setDate(currentDate.getDate() + expiryDays)
+    clientInfoPromises.then(clientInfos => clientInfos.forEach(info => {
+      if (info.expireDateMs < after30days) {
+        console.log('renewing client key')
+        createClientConfigRequest(info.commonName, info.email).then((token) => {
+          emailToken(info.commonName, info.email, token)
+        })
+      }
+    })).then(() => serverInfoPromises).then(serverInfos => serverInfos.forEach(info => {
+      if (info.expireDateMs < after30days) {
+        console.log('renewing server key')
+        createServerKey(params).then((serverFiles) => {
+          fs.writeFileSync(params.openVPNServerConfigPath, createServerConfig())
+          removePrivateServerFiles()
+        }).catch(err => {
+          console.error(err)
+        })
+      }
+    }))
   } else {
     const params = JSON.parse(fs.readFileSync('./params.json'))
     if (params.sslKey && params.sslCer) {
